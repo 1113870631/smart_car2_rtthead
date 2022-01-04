@@ -40,11 +40,11 @@ void set_motrol_pin(void){
  * */
 int motrol_1_con(int dir,int speed){
    switch(dir){
-   case(MOTROL_FORHEAD): //设置前进引脚
+   case(MOTROL_BACKWORD): //设置前进引脚
         rt_pin_write( IN1_PIN,  PIN_LOW);
         rt_pin_write( IN2_PIN,  PIN_HIGH);
         break;
-   case(MOTROL_BACKWORD)://设置后退引脚
+   case(MOTROL_FORHEAD)://设置后退引脚
                 rt_pin_write( IN1_PIN,  PIN_HIGH);
                 rt_pin_write( IN2_PIN,  PIN_LOW);
                 break;

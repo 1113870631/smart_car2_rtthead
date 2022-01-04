@@ -22,15 +22,15 @@ rt_uint32_t pulse);
 
 
 /*设置方向 设置pwm占空比*/
-int ch_dir(double angle ,int speed,void* device){
+int ch_dir(double per ,int speed,void* device){
 
     int period=20000000;
-    double goal;
+    int goal;
     /*500000~1500000~2500000
      * 20000000/180=11111 份
      * goal =angle*11111+500000
      * */
-    goal=500000+angle*11111;
+    goal=500000+per*2000000*0.01;
     rt_pwm_set(device,1,period, goal);
     return 0;
 };

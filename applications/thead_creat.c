@@ -109,7 +109,7 @@ static void uart_re_entry(void *parameter){
 /*命令缓冲区
  * [0] [0/1/-1] [speed][保留]
  * [0]:代表是速度控制命令
- * [0/1/-1] 0 停止  1 前进 -1 后退
+ * [0/1/-1] 0 停止  1 前进 2 后退
  * 完整命令实例：  0 1 0 0
  * */
 /*线程2 入口  解析move命令缓冲区命令执行命令*/
@@ -125,13 +125,16 @@ static void total_con_move_entry(void *parameter){
                 return; }
                 else//解析命令执行动作
                 {
-                    if(command_move_pool[1]==1){
+                    if(command_move_pool[1]=='1'){
+                        motrol_1_con(MOTROL_FORHEAD, 100);
                         motrol_1_con(MOTROL_FORHEAD, 100);
                     };
-                    if(command_move_pool[1]==0){
+                    if(command_move_pool[1]=='0'){
+                        motrol_1_con(MOTROL_STOP, 100);
                         motrol_1_con(MOTROL_STOP, 100);
                     };
-                    if(command_move_pool[1]==-1){
+                    if(command_move_pool[1]=='2'){
+                         motrol_1_con(MOTROL_BACKWORD, 100);
                          motrol_1_con(MOTROL_BACKWORD, 100);
                     };
                 }
@@ -147,7 +150,8 @@ static void total_con_move_entry(void *parameter){
     线程3 入口  解析dir命令缓冲区命令执行命令*/
 static void total_con_dir_entry(void *parameter){
     rt_err_t ret;
-    double angle;
+    int per;
+    int angle2;
     rt_device_t  pwm_dev;
     /*打开pwm3*/
     pwm_dev = (struct rt_device_pwm *)rt_device_find("pwm3");
@@ -166,14 +170,19 @@ static void total_con_dir_entry(void *parameter){
                    else//解析命令执行动作
                    {
                      /*获取角度*/
-                     angle=(command_dir_pool[1]*10+command_dir_pool[2]);
+                       int shi,ge,tmp;
+                       shi=command_dir_pool[1]-'0';
+                       ge =command_dir_pool[2]-'0';
+                       rt_kprintf("shi: %d\n",shi);
+                       rt_kprintf("ge: %d\n",ge);
+                     per=(shi*10+ge);
                      /*设置角度
-                      * 左为0 右为180*/
-                     ch_dir(angle, 100, pwm_dev);
+                      * per 30~50~70*/
+                     rt_kprintf("per: %d\n",per);
+                     ch_dir(per, 100, pwm_dev);
                    }
        }
 }
-
 
 
 static int thead1(void){
@@ -204,7 +213,7 @@ static int thead2(void){
 }
 static int thead3(void){
     rt_thread_t tid3;
-    /* 创 建 线 程 2， 名 称 是 total_con， 入 口 是 total_con_entry*/
+    /* 创 建 线 程 2， 名 称 是 total_con， 入 口 是 total_con_dir_entry*/
     tid3 = rt_thread_create("con_dir",
     total_con_dir_entry, RT_NULL,
     THREAD_STACK_SIZE,
@@ -219,7 +228,7 @@ static int thead3(void){
 
 int thead_creat(void){
     thead1();//启动线程1 命令接收与转移
-    thead2();//启动线程2  move 命令解析与执行
+    thead2();//启动线程2 move 命令解析与执行
     thead3();//启动线程3 dir 命令解析与执行
     return 0;
 };
