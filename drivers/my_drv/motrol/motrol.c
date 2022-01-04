@@ -11,10 +11,10 @@
 #include <rtdevice.h>
 #include <drv_common.h>
 /*获取控制引脚编号*/
-#define IN1_PIN GET_PIN(F, 0)
-#define IN2_PIN GET_PIN(F, 1)
-#define IN3_PIN GET_PIN(D, 6)
-#define IN4_PIN GET_PIN(D, 7)
+#define IN1_PIN GET_PIN(B, 1)
+#define IN2_PIN GET_PIN(B, 2)
+#define IN3_PIN GET_PIN(C, 7)
+#define IN4_PIN GET_PIN(C, 8)
 /*获取pwm引脚编号*/
 #define PWM1_PIN GET_PIN(F, 9)
 #define PWM2_PIN GET_PIN(F, 9)
