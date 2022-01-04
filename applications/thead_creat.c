@@ -115,6 +115,8 @@ static void uart_re_entry(void *parameter){
 /*线程2 入口  解析move命令缓冲区命令执行命令*/
 static void total_con_move_entry(void *parameter){
     rt_err_t ret;
+    /*初识化引脚*/
+    set_motrol_pin();
     while(1)
     {
          /*等待信号量*/
@@ -126,16 +128,19 @@ static void total_con_move_entry(void *parameter){
                 else//解析命令执行动作
                 {
                     if(command_move_pool[1]=='1'){
+                        rt_kprintf("set forhead\n");
                         motrol_1_con(MOTROL_FORHEAD, 100);
-                        motrol_1_con(MOTROL_FORHEAD, 100);
+                        motrol_2_con(MOTROL_FORHEAD, 100);
                     };
                     if(command_move_pool[1]=='0'){
+                        rt_kprintf("set stop\n");
                         motrol_1_con(MOTROL_STOP, 100);
-                        motrol_1_con(MOTROL_STOP, 100);
+                        motrol_2_con(MOTROL_STOP, 100);
                     };
                     if(command_move_pool[1]=='2'){
+                        rt_kprintf("set back\n");
                          motrol_1_con(MOTROL_BACKWORD, 100);
-                         motrol_1_con(MOTROL_BACKWORD, 100);
+                         motrol_2_con(MOTROL_BACKWORD, 100);
                     };
                 }
     }
@@ -151,7 +156,7 @@ static void total_con_move_entry(void *parameter){
 static void total_con_dir_entry(void *parameter){
     rt_err_t ret;
     int per;
-    int angle2;
+
     rt_device_t  pwm_dev;
     /*打开pwm3*/
     pwm_dev = (struct rt_device_pwm *)rt_device_find("pwm3");
@@ -170,7 +175,7 @@ static void total_con_dir_entry(void *parameter){
                    else//解析命令执行动作
                    {
                      /*获取角度*/
-                       int shi,ge,tmp;
+                       int shi,ge;
                        shi=command_dir_pool[1]-'0';
                        ge =command_dir_pool[2]-'0';
                        rt_kprintf("shi: %d\n",shi);

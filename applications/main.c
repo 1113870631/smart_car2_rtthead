@@ -16,12 +16,13 @@
 #include <thead_creat.h>
 #include <motrol.h>
 #include <motrol_dir.h>
-
+#include <drv_common.h>
 
 
 
 int main(void)
 {
+
      thead_creat();
      return RT_EOK;
 }

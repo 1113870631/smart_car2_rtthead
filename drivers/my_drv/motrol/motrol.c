@@ -11,13 +11,13 @@
 #include <rtdevice.h>
 #include <drv_common.h>
 /*获取控制引脚编号*/
-#define IN1_PIN GET_PIN(B, 1)
-#define IN2_PIN GET_PIN(B, 2)
-#define IN3_PIN GET_PIN(C, 7)
-#define IN4_PIN GET_PIN(C, 8)
+#define IN1_PIN GET_PIN(B,1)
+#define IN2_PIN GET_PIN(B,2)
+#define IN3_PIN GET_PIN(C,7)
+#define IN4_PIN GET_PIN(C,8)
 /*获取pwm引脚编号*/
-#define PWM1_PIN GET_PIN(F, 9)
-#define PWM2_PIN GET_PIN(F, 9)
+#define PWM1_PIN GET_PIN(F,9)
+#define PWM2_PIN GET_PIN(F,9)
 
 /*电机控制引脚初识化*/
 void set_motrol_pin(void){
@@ -39,22 +39,22 @@ void set_motrol_pin(void){
  *in1 0 in2 0 电机1停止
  * */
 int motrol_1_con(int dir,int speed){
-   switch(dir){
-   case(MOTROL_BACKWORD): //设置前进引脚
-        rt_pin_write( IN1_PIN,  PIN_LOW);
-        rt_pin_write( IN2_PIN,  PIN_HIGH);
-        break;
-   case(MOTROL_FORHEAD)://设置后退引脚
-                rt_pin_write( IN1_PIN,  PIN_HIGH);
-                rt_pin_write( IN2_PIN,  PIN_LOW);
-                break;
-   case(MOTROL_STOP):    //设置停止引脚
-            rt_pin_write( IN1_PIN,  PIN_LOW);
-            rt_pin_write( IN2_PIN,  PIN_LOW);
-            break;
-   };
+    switch(dir){
 
-     return 0;
+          case(MOTROL_FORHEAD): //设置前进引脚
+                   rt_pin_write( IN1_PIN,  PIN_LOW);
+                   rt_pin_write( IN2_PIN,  PIN_HIGH);
+                   break;
+          case(MOTROL_BACKWORD)://设置后退引脚
+                   rt_pin_write( IN1_PIN,  PIN_HIGH);
+                   rt_pin_write( IN2_PIN,  PIN_LOW);
+                   break;
+          case(MOTROL_STOP):    //设置停止引脚
+                   rt_pin_write( IN1_PIN,  PIN_LOW);
+                   rt_pin_write( IN2_PIN,  PIN_LOW);
+                   break;
+       };
+       return 0;
 };
 
 int motrol_2_con(int dir,int speed){
