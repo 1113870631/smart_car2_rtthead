@@ -1,9 +1,9 @@
 #include "thead_creat.h"
-#define DBG_TAG "thead_creat.h"
-#define DBG_LVL DBG_LOG
-#include <rtdbg.h>
+
 #include <rtdevice.h>
 #include <thead_creat.h>
+#include <motrol.h>
+#include <motrol_dir.h>
 /*命令缓冲区
  * [0] [0/1/-1] [speed][保留]
  * [0]:代表是速度控制命令
@@ -20,33 +20,28 @@
 char command_move_pool[4];
 char command_dir_pool[4];
 int num=0;
-
 rt_sem_t rx_sem,move_sem,dir_sem;
 /*线程1 入口 接收上层命令 传输到对应的命令缓冲区*/
 static void uart_re_entry(void *parameter){
 
-
     char buffer[4];
-
     #define SAMPLE_UART_NAME "uart2" /* 串 口 设 备 名 称 */
     static rt_device_t serial; /* 串 口 设 备 句 柄 */
     rt_err_t ret,result;
 
+/*接收回调函数 接收4个字节发送信号*/
     rt_err_t uart_input(rt_device_t dev, rt_size_t size) {
-        //num++;
-        //rt_kprintf("num is %d\n",num);
         rt_kprintf("size is %d\n",size);
         if(size==4)
         {
             rt_sem_release(rx_sem);
         };
         //rt_kprintf("%d\n",size);
-    /* 串 口 接 收 到 数 据 后 产 生 中 断， 调 用 此 回 调 函 数， 然 后 发 送 接 收 信 号 量 */
-
-    return RT_EOK; }
-
-
+        return RT_EOK;
+    }
+    /*找到uart2*/
     serial = rt_device_find(SAMPLE_UART_NAME);
+    /*打开 uart2*/
     ret = rt_device_open(serial, RT_DEVICE_FLAG_INT_RX|RT_DEVICE_FLAG_RDWR);//中断接收 读写打开
     if(ret<0)
     {
@@ -61,9 +56,8 @@ static void uart_re_entry(void *parameter){
      rt_device_set_rx_indicate(serial, uart_input);
 
      int i =0;
-
      while(1)
-     {
+     {   /*等待串口接收到数据的信号量*/
          result = rt_sem_take(rx_sem, RT_WAITING_FOREVER);
          if (result != RT_EOK) {
          rt_kprintf("take a dynamic re_sem semaphore, failed.\n");
@@ -105,16 +99,22 @@ static void uart_re_entry(void *parameter){
                  };
                  rt_kprintf("\n");
                 i=0;
-             };
+             }
          }
     }
 };
 
 
+
+/*命令缓冲区
+ * [0] [0/1/-1] [speed][保留]
+ * [0]:代表是速度控制命令
+ * [0/1/-1] 0 停止  1 前进 -1 后退
+ * 完整命令实例：  0 1 0 0
+ * */
 /*线程2 入口  解析move命令缓冲区命令执行命令*/
 static void total_con_move_entry(void *parameter){
     rt_err_t ret;
-
     while(1)
     {
          /*等待信号量*/
@@ -125,20 +125,53 @@ static void total_con_move_entry(void *parameter){
                 return; }
                 else//解析命令执行动作
                 {
-
+                    if(command_move_pool[1]==1){
+                        motrol_1_con(MOTROL_FORHEAD, 100);
+                    };
+                    if(command_move_pool[1]==0){
+                        motrol_1_con(MOTROL_STOP, 100);
+                    };
+                    if(command_move_pool[1]==-1){
+                         motrol_1_con(MOTROL_BACKWORD, 100);
+                    };
                 }
-
-
     }
-
-
 }
-/*线程3 入口  解析dir命令缓冲区命令执行命令*/
+/*
+ *[1] [pwm1] [pwm1] [speed]
+ * [1]:代表是方向控制命令
+ * [pwm1] 占空比的第一个数
+ * [pwm2] 占空比的第二个数
+ * [speed] 代表速度 1 代表10%的速度 2 20% 0 100%
+ *完整命令实例：1 50 1
+    线程3 入口  解析dir命令缓冲区命令执行命令*/
 static void total_con_dir_entry(void *parameter){
-
-
-
-
+    rt_err_t ret;
+    double angle;
+    rt_device_t  pwm_dev;
+    /*打开pwm3*/
+    pwm_dev = (struct rt_device_pwm *)rt_device_find("pwm3");
+    /*使能pwm3*/
+    rt_pwm_enable(pwm_dev, 1);
+    /*初始化方向*/
+    dir_init(pwm_dev);
+       while(1)
+       {
+            /*等待信号量*/
+            ret = rt_sem_take(dir_sem, RT_WAITING_FOREVER);
+                   if (ret != RT_EOK) {
+                   rt_kprintf("take a dynamic dir semaphore, failed.\n");
+                   rt_sem_delete(dir_sem);
+                   return; }
+                   else//解析命令执行动作
+                   {
+                     /*获取角度*/
+                     angle=(command_dir_pool[1]*10+command_dir_pool[2]);
+                     /*设置角度
+                      * 左为0 右为180*/
+                     ch_dir(angle, 100, pwm_dev);
+                   }
+       }
 }
 
 
@@ -159,7 +192,7 @@ static int thead1(void){
 static int thead2(void){
     rt_thread_t tid2;
     /* 创 建 线 程 2， 名 称 是 total_con， 入 口 是 total_con_entry*/
-    tid2 = rt_thread_create("total_con_move",
+    tid2 = rt_thread_create("con_move",
     total_con_move_entry, RT_NULL,
     THREAD_STACK_SIZE,
     THREAD_PRIORITY, THREAD_TIMESLICE);
@@ -172,7 +205,7 @@ static int thead2(void){
 static int thead3(void){
     rt_thread_t tid3;
     /* 创 建 线 程 2， 名 称 是 total_con， 入 口 是 total_con_entry*/
-    tid3 = rt_thread_create("total_con_dir",
+    tid3 = rt_thread_create("con_dir",
     total_con_dir_entry, RT_NULL,
     THREAD_STACK_SIZE,
     THREAD_PRIORITY, THREAD_TIMESLICE);
