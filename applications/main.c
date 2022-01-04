@@ -15,13 +15,22 @@
 #include <rtdevice.h>
 #include <thead_creat.h>
 #include <motrol.h>
-
+#include <motrol_dir.h>
 
 
 
 
 int main(void)
 {
+
+
+    /*
+     * rt_device_t pwm_dev;
+    pwm_dev = (struct rt_device_pwm *)rt_device_find("pwm3");
+    rt_pwm_enable(pwm_dev, 1);
+    dir_init(pwm_dev);
+    //ch_dir(0 ,1,pwm_dev);
+     * */
 
      rt_thread_delay(5000);
      set_motrol_pin();

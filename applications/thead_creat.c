@@ -20,12 +20,14 @@
 char command_move_pool[4];
 char command_dir_pool[4];
 int num=0;
+
+rt_sem_t rx_sem,move_sem,dir_sem;
 /*线程1 入口 接收上层命令 传输到对应的命令缓冲区*/
 static void uart_re_entry(void *parameter){
 
 
     char buffer[4];
-    rt_sem_t rx_sem,move_sem,dir_sem;
+
     #define SAMPLE_UART_NAME "uart2" /* 串 口 设 备 名 称 */
     static rt_device_t serial; /* 串 口 设 备 句 柄 */
     rt_err_t ret,result;
@@ -64,7 +66,7 @@ static void uart_re_entry(void *parameter){
      {
          result = rt_sem_take(rx_sem, RT_WAITING_FOREVER);
          if (result != RT_EOK) {
-         rt_kprintf("take a dynamic semaphore, failed.\n");
+         rt_kprintf("take a dynamic re_sem semaphore, failed.\n");
          rt_sem_delete(rx_sem);
          return; }
          else//接收到串口收到消息的信号量   接收命令 判断命令 发送缓冲区
@@ -111,8 +113,23 @@ static void uart_re_entry(void *parameter){
 
 /*线程2 入口  解析move命令缓冲区命令执行命令*/
 static void total_con_move_entry(void *parameter){
+    rt_err_t ret;
+
+    while(1)
+    {
+         /*等待信号量*/
+         ret = rt_sem_take(move_sem, RT_WAITING_FOREVER);
+                if (ret != RT_EOK) {
+                rt_kprintf("take a dynamic move semaphore, failed.\n");
+                rt_sem_delete(move_sem);
+                return; }
+                else//解析命令执行动作
+                {
+
+                }
 
 
+    }
 
 
 }
